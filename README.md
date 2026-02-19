@@ -4,10 +4,10 @@ swiper - an application for selecting new songs based on those already liked on 
 ## project goal and description:
 
 ### goals:
--develop an analogue of the Swipify application.
--improving the algorithm for selecting new songs by implementing neural networks.
--add feature to add directly to "Liked Songs" playlist.
--later there will be more...
+- develop an analogue of the Swipify application.
+- improving the algorithm for selecting new songs by implementing neural networks.
+- add feature to add directly to "Liked Songs" playlist.
+- later there will be more...
 
 ### short description
 The basis of the idea of ​​developing this application is to learn how to work with neural networks, reverse engineering an existing application with improvements "for yourself". It is also planned to adapt this project for Android.
