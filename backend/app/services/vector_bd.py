@@ -12,11 +12,10 @@ class VectorDBService:
         return ids[0].tolist()
 
     def get_tracks_metadata(self, track_ids):
-        # Швидкий лукап метаданих треків за списком ID
+
         return self.metadata[self.metadata['faiss_id'].isin(track_ids)]
 
     def reconstruct_vector(self, track_id):
         return self.index.reconstruct(int(track_id))
 
-# Створюємо синглтон для використання в усьому додатку
 vector_db = VectorDBService()
