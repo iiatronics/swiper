@@ -4,3 +4,6 @@ faiss-cpu==1.8.0
 pandas==2.2.1
 numpy==1.26.4
 pydantic==2.6.4
+scikit-learn==1.4.1.post1
+kagglehub==0.2.3
+torch==2.2.1
