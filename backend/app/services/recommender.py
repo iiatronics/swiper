@@ -1,6 +1,6 @@
 import numpy as np
 from app.config import ALPHA, LATENT_DIM
-from app.services.vector_bd import vector_db
+from app.services.vector_db import vector_db
 
 # temp In-Memory base of users
 
