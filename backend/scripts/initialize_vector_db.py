@@ -1,3 +1,4 @@
+# backend/scripts/initialize_vector_db.py
 import os
 import pandas as pd
 import numpy as np
@@ -41,12 +42,15 @@ class InferenceDataset(Dataset):
     def __getitem__(self, idx): return torch.from_numpy(self.X_num[idx]), torch.from_numpy(self.X_genres[idx])
 
 if __name__ == '__main__':
-    checkpoint = torch.load("scripts\\model_v02.pt", weights_only=False, map_location=device)
+    NEW_MODEL_PATH = "scripts\\model_v03.pt" 
+    
+    print(f"Завантаження оновленого чекпоінту {NEW_MODEL_PATH}...")
+    checkpoint = torch.load(NEW_MODEL_PATH, weights_only=False, map_location=device)
     genre_encoders = checkpoint['genre_encoders']
     genre_vocab_size = checkpoint['genre_vocab_size']
-    input_num_dim = 10
+    input_num_dim = 11
 
-    encoder = Encoder(num_dim=10, genre_vocab_size=genre_vocab_size).to(device)
+    encoder = Encoder(num_dim=input_num_dim, genre_vocab_size=genre_vocab_size).to(device)
     encoder.load_state_dict(checkpoint['encoder_state_dict'])
     encoder.eval()
 
@@ -55,11 +59,17 @@ if __name__ == '__main__':
     path = os.path.join(tonygordonjr_spotify_dataset_2023_path, 'spotify_data_12_20_2023.csv')
     songs = pd.read_csv(path, low_memory=False)
 
-    numeric_features = ['acousticness', 'danceability', 'energy', 'instrumentalness', 'liveness', 'speechiness', 'valence', 'tempo', 'loudness', 'duration_ms']
-    categorical_features = ['genre_0', 'genre_1', 'genre_2', 'genre_3']
+    audio_features = [
+        'acousticness', 'danceability', 'energy', 'instrumentalness',
+        'liveness', 'speechiness', 'valence', 'tempo', 'loudness', 'duration_ms'
+    ]
+    year_feature = 'release_year'
+    numeric_features = audio_features + [year_feature]
+    categorical_features = ['genre_0', 'genre_1', 'genre_2', 'genre_3'] # <-- ДОДАНО (було пропущено)
 
     df_all = songs.dropna(subset=['genre_0']).copy().reset_index(drop=True)
 
+    # Точно повторюємо обробку з Colab для запобігання Data Mismatch
     for f in numeric_features:
         df_all[f] = df_all[f].fillna(df_all[f].median())
         df_all[f] = df_all[f].clip(df_all[f].quantile(0.01), df_all[f].quantile(0.99))
@@ -71,9 +81,7 @@ if __name__ == '__main__':
     for i, col in enumerate(categorical_features):
         le = genre_encoders[col]
         vals = df_all[col].fillna('unknown').astype(str).values
-        
         vals_cleaned = np.where(np.isin(vals, le.classes_), vals, le.classes_[0])
-        
         X_genres_all[:, i] = le.transform(vals_cleaned) + 1
 
     inf_loader = DataLoader(InferenceDataset(X_num_all, X_genres_all), batch_size=4096, shuffle=False, num_workers=2)
@@ -97,13 +105,13 @@ if __name__ == '__main__':
     id_col = next((c for c in ['track_id', 'id', 'uri', 'spotify_id'] if c in df_all.columns), None)
     name_col = next((c for c in ['track_name', 'name', 'title'] if c in df_all.columns), None)
     artist_col = next((c for c in ['artists', 'artist', 'track_artist', 'artists_name'] if c in df_all.columns), None)
-
     
     metadata_df = pd.DataFrame({
         'faiss_id': np.arange(len(all_embeddings)),
-        'spotify_id': df_all[id_col] if id_col else df_all.index.astype(str),
-        'track_name': df_all[name_col] if name_col else "Unknown Track",
-        'artist': df_all[artist_col] if artist_col else "Unknown Artist",
+        'spotify_id': df_all[id_col],
+        'track_name': df_all[name_col],
+        'artist': df_all[artist_col],
+        'released_year': df_all[year_feature].astype(int), 
         'genre_0': df_all['genre_0'].fillna('unknown').astype(str),
         'genre_1': df_all['genre_1'].fillna('').astype(str),
         'genre_2': df_all['genre_2'].fillna('').astype(str),
