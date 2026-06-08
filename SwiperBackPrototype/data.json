@@ -1,0 +1,61 @@
+{
+  "Swipes": [
+    {
+      "TrackId": "7uv632EkfwYhXoqf8rhYrg",
+      "TrackName": "Angel",
+      "Artist": "Massive Attack",
+      "AlbumArt": "https://i.scdn.co/image/ab67616d0000b2732fcb0a3c7a66e516b11cd26e",
+      "Liked": false,
+      "SwipedAt": "2026-06-08T03:36:05.7982248Z"
+    },
+    {
+      "TrackId": "5tXrJcJDCnaqjx3UTfRzPu",
+      "TrackName": "389",
+      "Artist": "Carlito389",
+      "AlbumArt": "https://i.scdn.co/image/ab67616d0000b273ce3d0b7074da3cde17c2b3c0",
+      "Liked": false,
+      "SwipedAt": "2026-06-08T03:36:13.6422528Z"
+    },
+    {
+      "TrackId": "6cJukEetEBUEiP7q45zzoB",
+      "TrackName": "\u041F\u043E\u0442\u044F\u0433 \u043D\u0430 \u041F\u0456\u0432\u0434\u0435\u043D\u044C",
+      "Artist": "Zwyntar",
+      "AlbumArt": "https://i.scdn.co/image/ab67616d0000b2739e6df377a99e43f2390a4199",
+      "Liked": true,
+      "SwipedAt": "2026-06-08T03:36:22.7413761Z"
+    },
+    {
+      "TrackId": "0rH7n4mMVNdYfJbfsVznoC",
+      "TrackName": "\u041D\u0456\u0447 \u0443\u043F\u0430\u0434\u0435",
+      "Artist": "Zwyntar",
+      "AlbumArt": "https://i.scdn.co/image/ab67616d0000b2739e6df377a99e43f2390a4199",
+      "Liked": false,
+      "SwipedAt": "2026-06-08T03:36:30.4901079Z"
+    },
+    {
+      "TrackId": "4B86cqQFO5wPCMXCwzJqIx",
+      "TrackName": "\u041C\u0443\u043D\u0448\u0430\u0439\u043D",
+      "Artist": "Zwyntar",
+      "AlbumArt": "https://i.scdn.co/image/ab67616d0000b2731da0e03b1d78840727339420",
+      "Liked": true,
+      "SwipedAt": "2026-06-08T03:37:16.0711455Z"
+    },
+    {
+      "TrackId": "3wCSp8twVjqjvVUU8rT0zv",
+      "TrackName": "\u041C\u0435\u043A\u0441\u0438\u043A\u0430\u043D\u0435\u0446\u044C",
+      "Artist": "Zwyntar",
+      "AlbumArt": "https://i.scdn.co/image/ab67616d0000b2731da0e03b1d78840727339420",
+      "Liked": true,
+      "SwipedAt": "2026-06-08T03:37:22.6381329Z"
+    },
+    {
+      "TrackId": "1aXWlDHSMZNPlSPz67UXz2",
+      "TrackName": "\u0427\u043E\u0432\u0435\u043D",
+      "Artist": "Zwyntar",
+      "AlbumArt": "https://i.scdn.co/image/ab67616d0000b2731da0e03b1d78840727339420",
+      "Liked": false,
+      "SwipedAt": "2026-06-08T03:37:29.5889742Z"
+    }
+  ],
+  "Playlist": null
+}

@@ -1,4 +1,4 @@
-@SwiperBackPrototype_HostAddress = http://localhost:5169
+@SwiperBackPrototype_HostAddress = http://localhost:5249
 
 GET {{SwiperBackPrototype_HostAddress}}/weatherforecast/
 Accept: application/json
