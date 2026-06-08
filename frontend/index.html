@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swiper Premium — Твій Музичний Радар</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #070a13;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.04) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.04) 0, transparent 50%);
+        }
+        .premium-glass {
+            background: rgba(20, 30, 48, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .neon-glow-green { box-shadow: 0 0 35px rgba(34, 197, 94, 0.3); }
+        .neon-glow-red { box-shadow: 0 0 35px rgba(239, 68, 68, 0.3); }
+        
+        /* Критично для мобільних: вимикає стандартний скролл сторінки при перетягуванні */
+        .drag-zone {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center font-sans overflow-hidden text-slate-100 select-none">
+
+    <div id="auth-screen" class="premium-glass p-8 rounded-[32px] shadow-2xl max-w-xs w-full mx-4 border border-slate-800/80 text-center flex flex-col justify-between h-[380px]">
+        <div class="mt-4">
+            <div class="text-4xl mb-4 animate-pulse">⚡</div>
+            <h1 class="text-2xl font-black tracking-tight text-white mb-2">Swiper <span class="text-xs font-mono uppercase tracking-widest px-2 py-0.5 bg-green-500/20 text-green-400 rounded-md border border-green-500/30">Radar</span></h1>
+            <p class="text-slate-400 text-xs max-w-[200px] mx-auto">AI-генератор персонального музичного простору</p>
+        </div>
+        
+        <div class="mb-2">
+            <input type="text" id="username-input" value="andrii_test" 
+                   class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-700 focus:outline-none focus:border-green-500/80 transition-all font-mono text-center tracking-wider text-sm mb-3">
+                   
+            <button onclick="login()" class="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-slate-950 font-black py-3 rounded-xl shadow-xl shadow-green-500/10 transition-all transform active:scale-[0.98] tracking-widest text-[11px] uppercase">
+                Підключитись
+            </button>
+        </div>
+    </div>
+
+    <div id="main-screen" class="hidden max-w-xs w-full h-full max-h-[500px] mx-4 flex flex-col justify-between py-4">
+        
+        <div class="flex justify-between items-center px-2">
+            <span class="text-[10px] font-black tracking-widest text-slate-500 uppercase">⚡ Radar Active</span>
+            <span id="user-badge" class="bg-slate-900 border border-slate-800 px-3 py-0.5 rounded-full text-[10px] text-green-400 font-mono tracking-wider"></span>
+        </div>
+
+        <div class="relative w-full flex-grow flex items-center justify-center my-4">
+            
+            <div id="no-tracks" class="absolute text-center p-6 hidden">
+                <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-green-500 mx-auto mb-2"></div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Синхронізація FAISS...</p>
+            </div>
+
+            <div id="track-card" class="drag-zone absolute premium-glass w-full h-[140px] rounded-[28px] shadow-2xl border border-slate-800 p-3 flex flex-col justify-center hidden cursor-grab active:cursor-grabbing origin-bottom">
+                
+                <div class="relative w-full h-[80px] rounded-xl overflow-hidden border border-slate-900 bg-slate-950/80">
+                    
+                    <iframe id="spotify-player" src="" width="100%" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media" class="block pointer-events-auto"></iframe>
+                    
+                    <div id="card-overlay" class="absolute inset-0 z-20 bg-transparent"></div>
+                </div>
+
+                <div class="flex justify-center items-center gap-12 mt-3">
+                    <button id="btn-dislike" onclick="triggerButtonSwipe('dislike')" class="text-slate-500 hover:text-red-400 transition-all active:scale-75">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                    <button id="btn-like" onclick="triggerButtonSwipe('like')" class="text-slate-500 hover:text-green-400 transition-all active:scale-75">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+        let userId = '';
+        let tracksQueue = [];
+        let currentTrack = null;
+
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        let dragStartTime = 0;
+        
+        const card = document.getElementById('track-card');
+        const overlay = document.getElementById('card-overlay');
+        const btnLike = document.getElementById('btn-like');
+        const btnDislike = document.getElementById('btn-dislike');
+
+        function login() {
+            const input = document.getElementById('username-input');
+            if (!input.value.trim()) return alert('Введіть нікнейм!');
+            userId = input.value.trim();
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-screen').classList.remove('hidden');
+            document.getElementById('user-badge').innerText = `@${userId}`;
+            initDragEngine();
+            loadFeed();
+        }
+
+        async function loadFeed() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/feed?user_id=${userId}`);
+                const data = await response.json();
+                if (data && data.cards && data.cards.length > 0) {
+                    tracksQueue = data.cards;
+                    showNextTrack();
+                } else {
+                    alert('Помилка завантаження стрічки.');
+                }
+            } catch (error) {
+                console.error('API Error:', error);
+                alert('Сервер FastAPI не відповідає. Перевір CORS!');
+            }
+        }
+
+        function showNextTrack() {
+            if (tracksQueue.length === 0) {
+                loadFeed();
+                return;
+            }
+
+            currentTrack = tracksQueue.shift();
+            showLoading(false);
+
+            card.style.transition = 'none';
+            card.style.transform = 'translateX(0) rotate(0) scale(1)';
+            card.style.opacity = '1';
+            card.style.borderColor = 'rgba(30, 41, 59, 0.8)';
+            card.classList.remove('neon-glow-green', 'neon-glow-red');
+            
+            btnLike.className = "text-slate-500 hover:text-green-400 transition-all active:scale-75";
+            btnDislike.className = "text-slate-500 hover:text-red-400 transition-all active:scale-75";
+
+            const playerIframe = document.getElementById('spotify-player');
+            playerIframe.src = `https://open.spotify.com/embed/track/${currentTrack.spotify_id}?utm_source=generator&theme=0`;
+        }
+
+        function initDragEngine() {
+            // Навешуємо події прямо на захисний оверлей, який лежить поверх плеєра
+            overlay.addEventListener('mousedown', startDrag);
+            window.addEventListener('mousemove', drag);
+            window.addEventListener('mouseup', endDrag);
+            
+            overlay.addEventListener('touchstart', startDrag, { passive: true });
+            window.addEventListener('touchmove', drag, { passive: true });
+            window.addEventListener('touchend', endDrag);
+        }
+
+        function startDrag(e) {
+            isDragging = true;
+            dragStartTime = Date.now();
+            startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            currentX = 0;
+            card.style.transition = 'none';
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            currentX = clientX - startX;
+            
+            let rotate = currentX * 0.05; 
+            card.style.transform = `translateX(${currentX}px) rotate(${rotate}deg) scale(1.02)`;
+
+            // Візуальний інтерактивний фідбек країв
+            if (currentX > 40) {
+                card.style.borderColor = 'rgba(34, 197, 94, 0.6)';
+                card.classList.add('neon-glow-green');
+                card.classList.remove('neon-glow-red');
+                btnLike.className = "text-green-400 scale-125 transition-transform font-bold";
+            } else if (currentX < -40) {
+                card.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                card.classList.add('neon-glow-red');
+                card.classList.remove('neon-glow-green');
+                btnDislike.className = "text-red-400 scale-125 transition-transform font-bold";
+            } else {
+                card.style.borderColor = 'rgba(30, 41, 59, 0.8)';
+                card.classList.remove('neon-glow-green', 'neon-glow-red');
+                btnLike.className = "text-slate-500";
+                btnDislike.className = "text-slate-500";
+            }
+        }
+
+        function endDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            const dragDuration = Date.now() - dragStartTime;
+            const threshold = 70; // Ультра-чутливий поріг для миттєвого свайпу
+
+            // ПРОДУКТОВИЙ ХАК: Якщо це був просто короткий швидкий клік без зміщення (менше 200мс і 5px) -> 
+            // це означає, що користувач хотів натиснути кнопку PLAY. Пропускаємо клік крізь оверлей!
+            if (dragDuration < 200 && Math.abs(currentX) < 5) {
+                overlay.style.pointerEvents = 'none'; // Тимчасово вимикаємо щит
+                setTimeout(() => { overlay.style.pointerEvents = 'auto'; }, 300); // Повертаємо щит назад
+                
+                // Повертаємо картку в дефолт
+                card.style.transform = 'translateX(0) rotate(0)';
+                return;
+            }
+
+            if (currentX > threshold) {
+                executeSwipeAnimation('like');
+            } else if (currentX < -threshold) {
+                executeSwipeAnimation('dislike');
+            } else {
+                // Пружне повернення назад
+                card.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.2), border-color 0.2s';
+                card.style.transform = 'translateX(0) rotate(0) scale(1)';
+                card.style.borderColor = 'rgba(30, 41, 59, 0.8)';
+                card.classList.remove('neon-glow-green', 'neon-glow-red');
+                btnLike.className = "text-slate-500";
+                btnDislike.className = "text-slate-500";
+            }
+        }
+
+        function triggerButtonSwipe(direction) {
+            currentX = direction === 'like' ? 150 : -150;
+            executeSwipeAnimation(direction);
+        }
+
+        function executeSwipeAnimation(direction) {
+            card.style.transition = 'transform 0.3s ease-in-out, opacity 0.2s';
+            const finalX = direction === 'like' ? window.innerWidth : -window.innerWidth;
+            const finalRotate = direction === 'like' ? 25 : -25;
+            
+            card.style.transform = `translateX(${finalX}px) rotate(${finalRotate}deg) scale(0.95)`;
+            card.style.opacity = '0';
+
+            try {
+                fetch(`${API_BASE_URL}/swipe`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        track_id: currentTrack.track_id,
+                        direction: direction
+                    })
+                });
+            } catch (err) {
+                console.error('API Swipe save error:', err);
+            }
+
+            setTimeout(showNextTrack, 250);
+        }
+
+        function showLoading(isLoading) {
+            const cardElement = document.getElementById('track-card');
+            const loaderElement = document.getElementById('no-tracks');
+            if (isLoading) {
+                cardElement.classList.add('hidden');
+                loaderElement.classList.remove('hidden');
+            } else {
+                cardElement.classList.remove('hidden');
+                loaderElement.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

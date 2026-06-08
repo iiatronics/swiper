@@ -13,7 +13,7 @@ from sklearn.preprocessing import StandardScaler
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Encoder(nn.Module):
-    def __init__(self, num_dim, genre_vocab_size, genre_embed_dim=32, latent_dim=128):
+    def __init__(self, num_dim, genre_vocab_size, genre_embed_dim=8, latent_dim=128):
         super().__init__()
         self.genre_embedding = nn.Embedding(genre_vocab_size, genre_embed_dim, padding_idx=0)
         genre_flat_dim = genre_embed_dim * 4
@@ -42,7 +42,7 @@ class InferenceDataset(Dataset):
     def __getitem__(self, idx): return torch.from_numpy(self.X_num[idx]), torch.from_numpy(self.X_genres[idx])
 
 if __name__ == '__main__':
-    NEW_MODEL_PATH = "scripts\\model_v03.pt" 
+    NEW_MODEL_PATH = "scripts\\model_v05.pt" 
     
     print(f"Завантаження оновленого чекпоінту {NEW_MODEL_PATH}...")
     checkpoint = torch.load(NEW_MODEL_PATH, weights_only=False, map_location=device)
@@ -65,11 +65,13 @@ if __name__ == '__main__':
     ]
     year_feature = 'release_year'
     numeric_features = audio_features + [year_feature]
-    categorical_features = ['genre_0', 'genre_1', 'genre_2', 'genre_3'] # <-- ДОДАНО (було пропущено)
+    categorical_features = ['genre_0', 'genre_1', 'genre_2', 'genre_3']
 
     df_all = songs.dropna(subset=['genre_0']).copy().reset_index(drop=True)
+    # if 'track_popularity' in df_all.columns:
+    #     df_all = df_all[df_all['track_popularity'] > 40].reset_index(drop=True)
+    #     print(f"Після фільтрації популярності залишилось: {len(df_all):,} треків")
 
-    # Точно повторюємо обробку з Colab для запобігання Data Mismatch
     for f in numeric_features:
         df_all[f] = df_all[f].fillna(df_all[f].median())
         df_all[f] = df_all[f].clip(df_all[f].quantile(0.01), df_all[f].quantile(0.99))

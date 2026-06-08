@@ -12,6 +12,10 @@ local.properties
 # Log/OS Files
 *.log
 
+#FAISS Index
+*.index
+
+
 # Android Studio generated files and folders
 captures/
 .externalNativeBuild/
