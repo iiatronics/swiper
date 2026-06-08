@@ -36,7 +36,7 @@ public class SpotifyController(SpotifyService spotify, StorageService storage) :
             {
                 // ── ХОЛОДНИЙ СТАРТ ───────────────────────────────────────────
                 // Беремо топ треки юзера → радіо на основі одного з них
-                var topTracks = await spotify.GetUserTopTracksAsync(Token, 5);
+                var topTracks = await spotify.GetUserTopTracksAsync(Token, 15);
 
                 if (topTracks.Count > 0)
                 {
@@ -50,7 +50,7 @@ public class SpotifyController(SpotifyService spotify, StorageService storage) :
                 if (rawTracks.Count == 0)
                 {
                     Console.WriteLine("⚠ Радіо порожнє, використовуємо search");
-                    rawTracks = await spotify.SearchTracksAsync(Token, "pop");
+                    rawTracks = await spotify.SearchTracksAsync(Token, "shoegaze");
                 }
             }
 
